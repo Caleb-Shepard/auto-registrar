@@ -10,7 +10,7 @@ sudo apt-get -y install python3 python3-pip chromium-browser
 brew cask install google-chrome
 brew install python3
 ```
-1) Download repository
+2) Download repository
 ```
 git clone https://github.com/Caleb-Shepard/Dota2_Autoaccept_Alexa
 ```
