@@ -6,13 +6,17 @@
 #    By: cshepard6055 <cshepard6055@floridapoly.edu>    |  \`-\   \ |  o       #
 #                                                       |---\  \   `|  l       #
 #    Created: 2018/05/16 14:51:03 by cshepard6055       | ` .\  \   |  y       #
-#    Updated: 2018/05/16 14:51:08 by cshepard6055       -------------          #
+#    Updated: 2018/05/17 11:39:55 by cshepard6055       -------------          #
 #                                                                              #
 # **************************************************************************** #
 
-if (whoami != root)
-  then echo "Please run as root. Try `sudo bash dependency_installer.sh`"
-  exit
+error() {
+  printf '\E[31m'; echo "$@"; printf '\E[0m'
+}
+
+if [[ $EUID > 0 ]]; then
+    error "Please run as root. Try `sudo bash dependency_installer.sh`"
+    exit 1
 fi
 
 # You may need Chromium or Google Chrome if you haven't already installed them
