@@ -34,3 +34,5 @@ sudo bash dependency_installer.sh
 
 # License
 [MIT License](LICENSE)
+
+Edited by Jeremy Eudy
