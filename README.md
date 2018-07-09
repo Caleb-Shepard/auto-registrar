@@ -1,5 +1,5 @@
 # Auto-Registrar
-*Auto-Registrar* is designed to help students at Florida Polytechnic University with the unofficial registration process.. <br />
+*Auto-Registrar* is designed to help university students with the unofficial registration process. <br />
 
 # Installation and Excecution
 1) Install prerequisites (per client system)
@@ -12,7 +12,7 @@ brew install python3
 ```
 2) Download repository
 ```
-git clone https://github.com/Caleb-Shepard/Dota2_Autoaccept_Alexa
+git clone https://github.com/Caleb-Shepard/auto-registrar
 ```
 3) Run dependency_installer.sh
 ```
@@ -31,6 +31,7 @@ sudo bash dependency_installer.sh
 [Caleb Shepard](https://github.com/Caleb-Shepard) <br />
 [Elijah Luckey](https://github.com/Luckey-Elijah) <br />
 [Jeremy Eudy](https://github.com/JeremyEudy)
+[Tiger Sachse](https://github.com/tgsachse)
 
 # License
 [MIT License](LICENSE)
