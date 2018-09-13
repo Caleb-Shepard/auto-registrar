@@ -29,6 +29,7 @@ sudo bash dependency_installer.sh
 
 # Authors
 [Caleb Shepard](https://github.com/Caleb-Shepard) <br />
+[Matt Giallourakis](https://github.com/foldsters) <br />
 [Elijah Luckey](https://github.com/Luckey-Elijah) <br />
 [Jeremy Eudy](https://github.com/JeremyEudy) <br />
 [Tiger Sachse](https://github.com/tgsachse)
