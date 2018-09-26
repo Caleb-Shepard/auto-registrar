@@ -1,51 +1,77 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
-from time import sleep
+# **************************************************************************** #
+#                                                                              #
+#                                                             |\               #
+#    cams.py                                            ------| \----          #
+#                                                       |    \`  \  |  p       #
+#    By: mattgiallourakis <mattgiallourakis@floridapoly.edu>`-\   \ |  o       #
+#                                                       |---\  \   `|  l       #
+#    Created: 2018/09/25 19:53:53 by mattgiallourakis   | ` .\  \   |  y       #
+#    Updated: 2018/09/25 19:54:33 by cshepard6055       -------------          #
+#                                                                              #
+# **************************************************************************** #
 
-import json
-from pprint import pprint, pformat
+from selenium.webdriver.support.ui  import WebDriverWait
+from selenium.webdriver.support     import expected_conditions
+from selenium.common.exceptions     import TimeoutException
+from selenium.webdriver.common.by   import By
+from selenium                       import webdriver
+
+from pprint                         import pprint, pformat
+
+from time                           import sleep
+
+
 import sqlite3
+import json
+
+# DEFINE GLOBALS
+WEBPAGE_GET_WAIT_TIME   = 10
+LOGIN_WAIT_TIME         = 60
+
+TRANSCRIPT_TABLE_XPATH  = "//*[@id='mainBody']/div[2]"
+CAMS_LOGIN_BOX_XPATH    = "//*[@id='LeftSide']"
+
+CAMS_URL                = "https://cams.floridapoly.org/student/login.asp"
+CHROME_LAUNCH_ARGS      = "--incognito"
+
 
 def scrape():
-    
-    cams_url = "https://cams.floridapoly.org/student/login.asp"
 
-    print("setting up browser")
+    print("Launching ChromeDriver instance")
+
     option = webdriver.ChromeOptions()
-    option.add_argument("--incognito")
-    browser = webdriver.Chrome(chrome_options=option)
-    browser.get(cams_url)
+    option.add_argument(CHROME_LAUNCH_ARGS)
+    chrome_instance = webdriver.Chrome(chrome_options=option)
+    chrome_instance.get(CAMS_URL)
 
-    sleep(10)
-    
-    print("waiting for the user to sign in (1 min timeout)")
+    sleep(WEBPAGE_GET_WAIT_TIME)
+
+    print("Waiting for the user to sign in (1 min timeout)")
     try:
-        check_item = (By.XPATH, "//*[@id='LeftSide']")
-        is_visible = EC.visibility_of_element_located(check_item)
-        WebDriverWait(browser, 60).until(is_visible)
+        login_box = (By.XPATH, CAMS_LOGIN_BOX_XPATH)
+        is_visible = expected_conditions.visibility_of_element_located(login_box)
+        WebDriverWait(browser, LOGIN_WAIT_TIME).until(is_visible)
     except TimeoutException:
         print("Timed Out")
         browser.quit()
 
     print("navigating to transcript")
+
+    transcript_table = browser.find_element_by_xpath("//*[@id='mainBody']/div[2]").text
     browser.find_element_by_id('spTranscript').click()
-    table = browser.find_element_by_xpath("//*[@id='mainBody']/div[2]").text
 
     print("exiting webpage")
     browser.quit()
-    return table
+    return transcript_table
 
 def parse(table):
 
     print("parsing table text")
     program = table.split('\n')[0][11:]
-    
+
     database_data = []
     json_data = {'program': program, 'courses': []}
-    
+
     split_table = table.split("Term:")
 
     for term_block in split_table[1:]:
@@ -53,7 +79,7 @@ def parse(table):
         term = rows[0][1:]
         year = term.split(' ')[-1]
         semester = ' '.join(term.split(' ')[:-1])
-        
+
         courses = rows[2:-3]
         semester_courses = []
 
@@ -119,16 +145,16 @@ def export_database(database_data):
                  letter_grade)
                  VALUES (?,?,?,?,?,?)"""
 
-    con = sqlite3.connect('course_database.db')
+    con = sqlite3.connexpected_conditionst('course_database.db')
     cur = con.cursor()
-    cur.execute(titles)
-    cur.executemany(fields, database_data)
+    cur.exexpected_conditionsute(titles)
+    cur.exexpected_conditionsutemany(fields, database_data)
     con.commit()
     con.close()
 
 
 def main():
-    
+
     table = scrape()
     json_data, database_data = parse(table)
     export_json(json_data)
