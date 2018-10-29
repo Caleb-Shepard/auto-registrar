@@ -50,18 +50,18 @@ def scrape():
     try:
         login_box = (By.XPATH, CAMS_LOGIN_BOX_XPATH)
         is_visible = expected_conditions.visibility_of_element_located(login_box)
-        WebDriverWait(browser, LOGIN_WAIT_TIME).until(is_visible)
+        WebDriverWait(chrome_instance, LOGIN_WAIT_TIME).until(is_visible)
     except TimeoutException:
         print("Timed Out")
-        browser.quit()
+        chrome_instance.quit()
 
     print("navigating to transcript")
 
-    transcript_table = browser.find_element_by_xpath("//*[@id='mainBody']/div[2]").text
-    browser.find_element_by_id('spTranscript').click()
+    transcript_table = chrome_instance.find_element_by_xpath("//*[@id='mainBody']/div[2]").text
+    chrome_instance.find_element_by_id('spTranscript').click()
 
     print("exiting webpage")
-    browser.quit()
+    chrome_instance.quit()
     return transcript_table
 
 def parse(table):
@@ -126,15 +126,28 @@ def export_json(json_data):
 
 
 def export_database(database_data):
+    con = sqlite3.connect('course_database.db')
+    cur = con.cursor()
 
-    titles = """CREATE TABLE courses
+    query = """
+        SELECT COUNT(*)
+        FROM sqlite_master
+        WHERE type='table' AND name='courses';"""
+
+    cur.execute(query)
+
+    if cur.fetchall()[0][0] != 1:
+        titles = """
+            CREATE TABLE courses
                 (id integer primary key autoincrement,
-                 year text,
-                 semester text,
-                 course_code text,
-                 course_name text,
-                 credit_hours integer,
-                 letter_grade text)"""
+                year text,
+                semester text,
+                course_code text,
+                course_name text,
+                credit_hours integer,
+                letter_grade text)
+            """
+        cur.execute(titles)
 
     fields = """INSERT INTO courses
                 (year,
@@ -145,10 +158,7 @@ def export_database(database_data):
                  letter_grade)
                  VALUES (?,?,?,?,?,?)"""
 
-    con = sqlite3.connexpected_conditionst('course_database.db')
-    cur = con.cursor()
-    cur.exexpected_conditionsute(titles)
-    cur.exexpected_conditionsutemany(fields, database_data)
+    cur.executemany(fields, database_data)
     con.commit()
     con.close()
 
