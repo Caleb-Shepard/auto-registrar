@@ -11,6 +11,7 @@
 # **************************************************************************** #
 
 from selenium.webdriver.support.ui  import WebDriverWait
+from selenium.webdriver.support.ui  import Select
 from selenium.webdriver.support     import expected_conditions
 from selenium.common.exceptions     import TimeoutException
 from selenium.webdriver.common.by   import By
@@ -32,6 +33,7 @@ TRANSCRIPT_TABLE_XPATH  = "//*[@id='mainBody']/div[2]"
 CAMS_LOGIN_BOX_XPATH    = "//*[@id='LeftSide']"
 
 CAMS_URL                = "https://cams.floridapoly.org/student/login.asp"
+CAMS_TRANSCRIPT_URL     = "https://cams.floridapoly.org/student/cePortalTranscript.asp"
 CHROME_LAUNCH_ARGS      = "--incognito"
 
 
@@ -39,15 +41,24 @@ def scrape():
 
     print("Launching ChromeDriver instance")
 
+    # Create chrome instance with pre-defined options and naviage to CAMS
     option = webdriver.ChromeOptions()
     option.add_argument(CHROME_LAUNCH_ARGS)
     chrome_instance = webdriver.Chrome(chrome_options=option)
     chrome_instance.get(CAMS_URL)
 
+    # Switch to alert and dismiss it
+    chrome_instance.switch_to.alert.accept()
+
+    # Get term drop down menu and select first item
+    dropDownTermMenu = Select(chrome_instance.find_element_by_id("idterm"))
+    dropDownTermMenu.select_by_index(0)
+
     sleep(WEBPAGE_GET_WAIT_TIME)
 
     print("Waiting for the user to sign in (1 min timeout)")
     try:
+        # Wait until the login box is no longer visible
         login_box = (By.XPATH, CAMS_LOGIN_BOX_XPATH)
         is_visible = expected_conditions.visibility_of_element_located(login_box)
         WebDriverWait(chrome_instance, LOGIN_WAIT_TIME).until(is_visible)
@@ -57,9 +68,13 @@ def scrape():
 
     print("navigating to transcript")
 
+    # Navigate to Unofficial Transcript Page
+    chrome_instance.get(CAMS_TRANSCRIPT_URL)
+    
+    # Get inner text of transcript table
     transcript_table = chrome_instance.find_element_by_xpath("//*[@id='mainBody']/div[2]").text
-    chrome_instance.find_element_by_id('spTranscript').click()
 
+    # Exit and return table HTML text
     print("exiting webpage")
     chrome_instance.quit()
     return transcript_table
