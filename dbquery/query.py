@@ -6,7 +6,7 @@
 """ ‍    By: mihirlad55                                |  \`-\   \ |  o      """
 """ ‍                                                  |---\  \   `|  l      """
 """ ‍    Created: 2018/10/29 13:11:01 by mihirlad55    | ` .\  \   |  y      """
-""" ‍    Updated: 2018/10/29 20:06:27 by mihirlad55    -------------         """
+""" ‍    Updated: 2018/10/29 20:31:57 by mihirlad55    -------------         """
 """ ‍                                                                        """
 """ ‍*********************************************************************** """
 # Import library
@@ -17,10 +17,13 @@ conn = sqlite3.connect('course_database.db')
 cur = conn.cursor()
 query = ""
 
-while query != "exit":
+while True:
     # Get query text from user
     query = input("Enter SQL Command (type exit to exit): ")
     
+    if (query == "exit"):
+       break
+        
     try:
         # Query Database
         cur.execute(query)
@@ -29,3 +32,6 @@ while query != "exit":
 
     # Print results of query
     print(cur.fetchall())
+
+conn.commit()
+conn.close()
