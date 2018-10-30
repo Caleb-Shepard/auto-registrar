@@ -6,20 +6,10 @@
 """ ‍    By: mattgiallourakis                          |  \`-\   \ |  o            """
 """ ‍                                                  |---\  \   `|  l            """
 """ ‍    Created: 2018/09/25 19:53:53 by mattgiallourakis    | ` .\  \   |  y      """
-""" ‍    Updated: 2018/10/29 20:03:52 by mihirlad55    -------------               """
+""" ‍    Updated: 2018/10/29 20:04:10 by mihirlad55    -------------               """
 """ ‍                                                                              """
 """ ‍***************************************************************************** """
-# **************************************************************************** #
-#                                                                              #
-#                                                             |\               #
-#    cams.py                                            ------| \----          #
-#                                                       |    \`  \  |  p       #
-#    By: mattgiallourakis <mattgiallourakis@floridapoly.edu>`-\   \ |  o       #
-#                                                       |---\  \   `|  l       #
-#    Created: 2018/09/25 19:53:53 by mattgiallourakis   | ` .\  \   |  y       #
-#    Updated: 2018/10/29 18:15:25 by mlad7113          -------------          #
-#                                                                              #
-# **************************************************************************** #
+
 
 from selenium.webdriver.support.ui  import WebDriverWait
 from selenium.webdriver.support.ui  import Select
