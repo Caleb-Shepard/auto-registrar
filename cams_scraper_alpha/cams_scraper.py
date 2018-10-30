@@ -6,7 +6,7 @@
 """ ‍    By: mattgiallourakis                          |  \`-\   \ |  o            """
 """ ‍                                                  |---\  \   `|  l            """
 """ ‍    Created: 2018/09/25 19:53:53 by mattgiallourakis    | ` .\  \   |  y      """
-""" ‍    Updated: 2018/10/29 20:04:10 by mihirlad55    -------------               """
+""" ‍    Updated: 2018/10/29 20:37:43 by mihirlad55    -------------               """
 """ ‍                                                                              """
 """ ‍***************************************************************************** """
 
@@ -202,7 +202,7 @@ def export_database(database_data):
     # If result of query doesn't = 1, create a new courses table
     if cur.fetchall()[0][0] != 1:
         # Create query for creating new courses table
-        titles = """
+        query = """
             CREATE TABLE courses
                 (id integer primary key autoincrement,
                 year text,
@@ -212,21 +212,27 @@ def export_database(database_data):
                 credit_hours integer,
                 letter_grade text)
             """
-        # Execute titles query
-        cur.execute(titles)
+    else:
+        # If table already exists, clear all records
+        query = "DELETE FROM courses"
+
+    # Execute titles query
+    cur.execute(query)
 
     # Create query for inserting new courses
-    fields = """INSERT INTO courses
+    query = """
+            INSERT INTO courses
                 (year,
                  semester,
                  course_code,
                  course_name,
                  credit_hours,
                  letter_grade)
-                 VALUES (?,?,?,?,?,?)"""
+                 VALUES (?,?,?,?,?,?)
+        """
 
     # Execute fields query, replacing '?' with data for every row in database_data
-    cur.executemany(fields, database_data)
+    cur.executemany(query, database_data)
     # Save the database
     con.commit()
     # Close the connection
