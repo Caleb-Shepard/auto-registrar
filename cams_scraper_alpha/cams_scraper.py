@@ -6,7 +6,7 @@
 """ ‍    By: mattgiallourakis                          |  \`-\   \ |  o            """
 """ ‍                                                  |---\  \   `|  l            """
 """ ‍    Created: 2018/09/25 19:53:53 by mattgiallourakis    | ` .\  \   |  y      """
-""" ‍    Updated: 2018/10/29 22:12:16 by mihirlad55    -------------               """
+""" ‍    Updated: 2018/10/29 22:58:54 by mihirlad55    -------------               """
 """ ‍                                                                              """
 """ ‍***************************************************************************** """
 
@@ -42,8 +42,10 @@ CAMS_TRANSCRIPT_URL                 = "https://cams.floridapoly.org/student/cePo
 CAMS_COURSES_URL                    = "https://cams.floridapoly.org/student/cePortalOffering.asp"
 CHROME_LAUNCH_ARGS                  = "--incognito"
 
+# Globals
 chrome_instance = None
-
+username = ""
+password = ""
 
 def initializeChromeDriver():
     print("Launching ChromeDriver instance")
@@ -59,7 +61,8 @@ def initializeChromeDriver():
 
 def loginCAMS():
     # Modify global version of chrome_instance
-    global chrome_instance
+    global chrome_instance, username, password
+
 
     # Switch to alert and dismiss it
     chrome_instance.switch_to.alert.accept()
@@ -68,17 +71,29 @@ def loginCAMS():
     dropDownTermMenu = Select(chrome_instance.find_element_by_id("idterm"))
     dropDownTermMenu.select_by_index(0)
 
-    sleep(WEBPAGE_GET_WAIT_TIME)
+    # If username argument is given, input username in CAMS
+    if username != "":
+        chrome_instance.find_element_by_id("txtUsername").send_keys(username)
 
-    print("Waiting for the user to sign in (1 min timeout)")
-    try:
-        # Wait until the login box is no longer visible
-        login_box = (By.XPATH, CAMS_LOGIN_BOX_XPATH)
-        is_visible = expected_conditions.visibility_of_element_located(login_box)
-        WebDriverWait(chrome_instance, LOGIN_WAIT_TIME).until(is_visible)
-    except TimeoutException:
-        print("Timed Out")
-        chrome_instance.quit()
+    # If password argument is given, input password in CAMS
+    if password != "":
+        chrome_instance.find_element_by_id("txtPassword").send_keys(password)
+
+    # If both username and password were given, login automatically
+    if username != "" and password != "":
+        chrome_instance.find_element_by_id("btnLogin").click()
+    else:
+        sleep(WEBPAGE_GET_WAIT_TIME)
+
+        print("Waiting for the user to sign in (1 min timeout)")
+        try:
+            # Wait until the login box is no longer visible
+            login_box = (By.XPATH, CAMS_LOGIN_BOX_XPATH)
+            is_visible = expected_conditions.visibility_of_element_located(login_box)
+            WebDriverWait(chrome_instance, LOGIN_WAIT_TIME).until(is_visible)
+        except TimeoutException:
+            print("Timed Out")
+            chrome_instance.quit()
 
 
 
@@ -302,8 +317,33 @@ def export_database(database_data):
     con.close()
 
 
-def main():
+def parseCommandLineArguments(argv):
+    # Modify global variables
+    global username, password
 
+    # Separate the options and argument inputs into separate lists with matching indicies
+    try:
+        opts, args = getopt.getopt(argv[1:], "hu:p:", ["username=", "password="])
+    # If incorrect argument form, display help
+    except getopt.GetoptError:
+        sys.exit(2)
+    for opt, arg in opts:
+        # If -h option, show commandline usage and exit
+        if opt == '-h':
+            print("cams_scraper.py -u <username> -p <password>")
+            sys.exit()
+        # If -u option, update global username variable with argument
+        elif opt in ("-u", "--username"):
+            username = arg
+        # If -p option, update global password variable with argument
+        elif opt in ("-p", "--password"):
+            password = arg
+
+
+def main(argv):
+    # Parse Command Line Arguments
+    parseCommandLineArguments(argv)
+    
     # Initialize and login
     initializeChromeDriver()
     loginCAMS()
@@ -331,4 +371,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv)
