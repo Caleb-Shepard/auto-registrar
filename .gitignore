@@ -1,0 +1,6 @@
+*.exe
+*.db
+*.json
+*.log
+.pylintrc
+/.vscode
