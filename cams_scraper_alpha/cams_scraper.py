@@ -6,7 +6,7 @@
 """ ‍    By: mattgiallourakis                          |  \`-\   \ |  o            """
 """ ‍                                                  |---\  \   `|  l            """
 """ ‍    Created: 2018/09/25 19:53:53 by mattgiallourakis    | ` .\  \   |  y      """
-""" ‍    Updated: 2018/10/29 20:37:43 by mihirlad55    -------------               """
+""" ‍    Updated: 2018/10/29 22:12:16 by mihirlad55    -------------               """
 """ ‍                                                                              """
 """ ‍***************************************************************************** """
 
@@ -25,28 +25,41 @@ from time                           import sleep
 
 import sqlite3
 import json
+import re
+import sys, getopt
 
 # DEFINE GLOBALS
-WEBPAGE_GET_WAIT_TIME   = 10
-LOGIN_WAIT_TIME         = 60
+WEBPAGE_GET_WAIT_TIME               = 10
+LOGIN_WAIT_TIME                     = 60
 
-TRANSCRIPT_TABLE_XPATH  = "//*[@id='mainBody']/div[2]"
-CAMS_LOGIN_BOX_XPATH    = "//*[@id='LeftSide']"
+CAMS_TRANSCRIPT_TABLE_XPATH         = "//*[@id='mainBody']/div[2]"
+CAMS_LOGIN_BOX_XPATH                = "//*[@id='LeftSide']"
+CAMS_COURSES_TABLE_XPATH            = "//*[@id='mainBody']/div[2]/table"
+CAMS_COURSES_NUM_OF_PAGES_XPATH     = "//*[@id='mainBody']/div[2]/div[1]"
 
-CAMS_URL                = "https://cams.floridapoly.org/student/login.asp"
-CAMS_TRANSCRIPT_URL     = "https://cams.floridapoly.org/student/cePortalTranscript.asp"
-CHROME_LAUNCH_ARGS      = "--incognito"
+CAMS_URL                            = "https://cams.floridapoly.org/student/login.asp"
+CAMS_TRANSCRIPT_URL                 = "https://cams.floridapoly.org/student/cePortalTranscript.asp"
+CAMS_COURSES_URL                    = "https://cams.floridapoly.org/student/cePortalOffering.asp"
+CHROME_LAUNCH_ARGS                  = "--incognito"
+
+chrome_instance = None
 
 
-def scrape():
-
+def initializeChromeDriver():
     print("Launching ChromeDriver instance")
 
+    # Modify global version of chrome_instance
+    global chrome_instance
     # Create chrome instance with pre-defined options and naviage to CAMS
     option = webdriver.ChromeOptions()
     option.add_argument(CHROME_LAUNCH_ARGS)
     chrome_instance = webdriver.Chrome(chrome_options=option)
     chrome_instance.get(CAMS_URL)
+
+
+def loginCAMS():
+    # Modify global version of chrome_instance
+    global chrome_instance
 
     # Switch to alert and dismiss it
     chrome_instance.switch_to.alert.accept()
@@ -67,18 +80,68 @@ def scrape():
         print("Timed Out")
         chrome_instance.quit()
 
+
+
+def scrapeTranscript():
+    # Modify global version of chrome_instance
+    global chrome_instance
+    
     print("navigating to transcript")
 
     # Navigate to Unofficial Transcript Page
     chrome_instance.get(CAMS_TRANSCRIPT_URL)
     
     # Get inner text of transcript table
-    transcript_table = chrome_instance.find_element_by_xpath("//*[@id='mainBody']/div[2]").text
+    transcript_table = chrome_instance.find_element_by_xpath(CAMS_TRANSCRIPT_TABLE_XPATH).text
 
-    # Exit and return table HTML text
-    print("exiting webpage")
-    chrome_instance.quit()
     return transcript_table
+
+
+def scrapeCourseOfferings():
+    # Modify global version of chrome_instance
+    global chrome_instance
+
+    # Navigate to Course Offerings webpage
+    chrome_instance.get(CAMS_COURSES_URL)
+
+    coursesTable = ""
+
+    # Get number of pages of courses
+    numOfPagesDiv = chrome_instance.find_element_by_xpath(CAMS_COURSES_NUM_OF_PAGES_XPATH).text
+    numOfPages = numOfPagesDiv.split('\n')[-1].split(' ')[-1][:-1]
+    
+    for i in range(1, int(numOfPages) + 1):
+        # Load next page by calling javascript function
+        chrome_instance.execute_script("displayNewPage(" + str(i) + ")")
+
+        # Get inner text of courses table and add it to coursesTable
+        coursesTable += chrome_instance.find_element_by_xpath(CAMS_COURSES_TABLE_XPATH).text + "\n"
+    
+    # Remove unnecessary text
+    coursesTable = re.sub(r"(Book List)|(Instructor Room Days Date Start Time End Time Max Enr Total Enr)|" +
+        r"(Course Offering List)|(Course Course Name Credits Start Date End Date Max Enr Total Enr)", "", coursesTable)
+
+    print(coursesTable)
+    return(coursesTable)
+
+
+
+
+
+#################################################################   
+#                   Assuming This Table Format                  #
+#################################################################
+# EML4951CENGR02                                                #
+#                                                               #
+# Engineering Design Senior Capstone 2 3 1/7/2019 4/24/2019 24 0#
+#                                                               #
+# Park, Younggil IST-1000 M Weekly 12:00:00 PM 12:50:00 PM 24 0 #
+# Park, Younggil IST-1044 WF Weekly 12:00:00 PM 12:50:00 PM 24 0#
+# Park, Younggil IST-1036 F Weekly 1:00:00 PM 1:50:00 PM 24 0   #
+#################################################################
+def parseCoursesTable(table):
+    print("Parsing Courses Table...")
+    
 
 
 
@@ -100,7 +163,7 @@ def scrape():
 # Term 15.00 0.00 0.00 0.00 0.00                                                #
 # Cumulative 15.00 0.00 0.00 0.00 0.00                                          #
 #################################################################################
-def parse(table):
+def parseTranscriptTable(table):
 
     print("parsing table text")
 
@@ -241,14 +304,30 @@ def export_database(database_data):
 
 def main():
 
+    # Initialize and login
+    initializeChromeDriver()
+    loginCAMS()
+    
     # Get Transcript Table
-    table = scrape()
-    # Get JSON and database information from table
-    json_data, database_data = parse(table)
+    tableTranscript = scrapeTranscript()
+
+    # Get Course Offerings table
+    tableCourses = scrapeCourseOfferings()
+
+    # Close chrome_instance
+    print("exiting webpage")
+    chrome_instance.quit()
+
+    jsonCoursesData, databaseCoursesData = parseCoursesTable(tableCourses)
+
+    # Get JSON and database information from transcript table
+    json_transcript_data, database_transcript_data = parseTranscriptTable(tableTranscript)
+
     # Export transcript data into JSON file
-    export_json(json_data)
+    export_json(json_transcript_data)
+    
     # Export transcript data into database file
-    export_database(database_data)
+    export_database(database_transcript_data)
 
 
 if __name__ == '__main__':
