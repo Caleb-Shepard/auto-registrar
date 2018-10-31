@@ -18,7 +18,6 @@ import getpass
 
 
 # DEFINE GLOBALS
-CHROMEDRIVER_PATH   = "/usr/local/bin/chromedriver"
 WEBDRIVER_SLEEP     = 5
 DEBUG_MODE          = True
 CANVAS_URL          = "https://pulse.floridapoly.edu"
